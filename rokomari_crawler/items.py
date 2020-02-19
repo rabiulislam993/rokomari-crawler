@@ -11,6 +11,7 @@ import scrapy
 class RokomariCrawlerItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
+    seo_title = scrapy.Field()
     title = scrapy.Field()
     author = scrapy.Field()
     translator = scrapy.Field()
@@ -23,7 +24,12 @@ class RokomariCrawlerItem(scrapy.Item):
     language = scrapy.Field()
 
     price = scrapy.Field()
+    category = scrapy.Field()
     book_url = scrapy.Field()
+    book_id = scrapy.Field()
+    book_slug = scrapy.Field()
     image_urls = scrapy.Field()
+    description = scrapy.Field()
+
 
     images = scrapy.Field()

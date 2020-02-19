@@ -8,6 +8,7 @@
 #     https://doc.scrapy.org/en/latest/topics/settings.html
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
+import os
 
 BOT_NAME = 'rokomari_crawler'
 
@@ -67,7 +68,7 @@ ROBOTSTXT_OBEY = False
 ITEM_PIPELINES = {
    'scrapy.pipelines.images.ImagesPipeline': 1,
 }
-IMAGES_STORE = '/media/shafik/Educational/myproject/scrapy/project/rokomari_crawler/non-fiction'
+IMAGES_STORE = os.path.join(os.getcwd(), "media")
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -91,4 +92,7 @@ IMAGES_STORE = '/media/shafik/Educational/myproject/scrapy/project/rokomari_craw
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # Feed export ordering
-FEED_EXPORT_FIELDS = ['title','author', 'translator', 'editor', 'publisher','isbn', 'edition', 'no_of_page', 'country', 'language', 'price', 'book_url', 'image_urls', 'images' ]
+FEED_EXPORT_FIELDS = [
+   'seo_title', 'title', 'author', 'translator', 'editor', 'publisher', 'isbn',
+   'edition', 'no_of_page', 'country', 'language', 'price', 'category',
+   'book_url', 'book_id', 'book_slug', 'image_urls', 'images', 'description']
