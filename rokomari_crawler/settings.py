@@ -93,6 +93,6 @@ IMAGES_STORE = os.path.join(os.getcwd(), "media")
 
 # Feed export ordering
 FEED_EXPORT_FIELDS = [
-   'seo_title', 'title', 'author', 'translator', 'editor', 'publisher', 'isbn',
+   'title', 'author', 'translator', 'editor', 'publisher', 'isbn',
    'edition', 'no_of_page', 'country', 'language', 'price', 'category',
    'book_url', 'book_id', 'book_slug', 'image_urls', 'images', 'description']

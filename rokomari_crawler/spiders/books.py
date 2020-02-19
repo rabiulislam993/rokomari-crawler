@@ -63,7 +63,7 @@ class BooksSpider(scrapy.Spider):
     
     def parse_book(self, response, is_detail_page_url=False):
         l = ItemLoader(item=RokomariCrawlerItem(), response=response)
-        title = book_info(response, 'Title')
+        # title = book_info(response, 'Title')
 
         author = book_info_a(response, 'Author')
         translator = book_info_a(response, 'Translator')
@@ -95,18 +95,18 @@ class BooksSpider(scrapy.Spider):
         if description and not re.sub(html_tags, "", description).strip():
             description = None  # remove empty <p> tags
 
-        seo_title = response.xpath('//title/text()').get().strip()
-        if seo_title:
+        title = response.xpath('//title/text()').get().strip()
+        if title:
             # format
-            seo_title_list = seo_title.split("|")
-            if len(seo_title_list) == 3:
-                ban, eng, _ = seo_title.split("|")
-                seo_title = ban.strip() + " (" + eng.strip()[4:-7] + ")"
+            title_list = title.split("|")
+            if len(title_list) == 3:
+                ban, eng, _ = title.split("|")
+                title = ban.strip() + " (" + eng.strip()[4:-7] + ")"
             else:
-                eng, _ = seo_title.split("|")
-                seo_title = eng.strip()[4:-7]
+                eng, _ = title.split("|")
+                title = eng.strip()[4:-7]
 
-        l.add_value('seo_title', seo_title)
+        # l.add_value('title', title)
         l.add_value('title', title)
         l.add_value('author', author)
         l.add_value('translator', translator)
