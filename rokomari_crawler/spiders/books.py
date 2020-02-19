@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import csv
 import re
 
 import scrapy
@@ -7,53 +8,60 @@ from scrapy.loader import ItemLoader
 
 from rokomari_crawler.items import RokomariCrawlerItem
 
+html_tags = re.compile('<.*?>')
+book_detail_page_url_pattern = re.compile(r"rokomari.com/book/[\d]+/")
+
+
+def is_book_detail_page_url(url):
+    return bool(re.search(book_detail_page_url_pattern, url))
+
 
 def book_info_a(response, value):
     try:
         return response.xpath('//td[text()="{}"]/following-sibling::td/a/text()'.format(value)).extract_first().strip()
     except:
-        value = ''
-        return value
+        return ''
+
 
 def book_info(response, value):
     try:
         return response.xpath('//td[text()="{}"]/following-sibling::td/text()'.format(value)).extract_first().strip()
     except:
-        value = ''
-        return value
+        return ''
 
-
-html_tags = re.compile('<.*?>')
 
 # scrapy crawl books -o data.csv -t csv
+
 
 class BooksSpider(scrapy.Spider):
     name = 'books'
     allowed_domains = ['rokomari.com']
 
     def __init__(self):
-        self.start_urls = [
-            # "https://www.rokomari.com/book/category/2407"  # boimela 2020
-            "https://www.rokomari.com/book/39685/essoper-golposomogro"
-        ]
+        urls_csv_file = "rokomari_book_urls.csv"
+        self.start_urls = []
+
+        with open(urls_csv_file) as book_urls_file:
+            book_urls = csv.DictReader(book_urls_file)
+            for raw in book_urls:
+                self.start_urls.append(raw["url"])
 
     def parse(self, response):
-        # books = response.xpath('//*[starts-with(@class, "book-list-wrapper")]')
-        #
-        # for book in books:
-        #     book_url = book.xpath('.//a/@href').extract_first()
-        #     book_absolute_url = response.urljoin(book_url)
-        #
-        #     yield Request(book_absolute_url, callback=self.parse_book, meta={'URL': book_absolute_url,})
-        # next_page_url = response.xpath('//a[text()="Next"]/@href').extract_first()
-        # absolute_next_page_url = response.urljoin(next_page_url)
-        #
-        #
-        # yield Request(absolute_next_page_url, callback=self.parse)
+        if is_book_detail_page_url(response.request.url):
+            yield self.parse_book(response, is_detail_page_url=True)
 
-        yield self.parse_book(response)
+        else:
+            books = response.xpath('//*[starts-with(@class, "book-list-wrapper")]')
+            for book in books:
+                book_url = book.xpath('.//a/@href').extract_first()
+                book_absolute_url = response.urljoin(book_url)
+                yield Request(book_absolute_url, callback=self.parse_book, meta={'URL': book_absolute_url,})
+
+            next_page_url = response.xpath('//a[text()="Next"]/@href').extract_first()
+            absolute_next_page_url = response.urljoin(next_page_url)
+            yield Request(absolute_next_page_url, callback=self.parse)
     
-    def parse_book(self, response):
+    def parse_book(self, response, is_detail_page_url=False):
         l = ItemLoader(item=RokomariCrawlerItem(), response=response)
         title = book_info(response, 'Title')
 
@@ -71,12 +79,11 @@ class BooksSpider(scrapy.Spider):
         price = response.xpath('//span[@class="sell-price"]/text()').extract_first().strip().split()[1]
         price = price.replace(",", "")
 
-        try:
+        if is_detail_page_url:
             book_url = response.request.url
-            book_id, book_slug = book_url.split("/")[4:6]
-        except Exception as e:
-            book_url = ""
-            book_id, book_slug = ["", ""]
+        else:
+            book_url = response.meta.get('URL')
+        book_id, book_slug = book_url.split("/")[4:6]
 
         image_urls = response.xpath('//div[@class="look-inside-bg"]/following-sibling::img/@src').extract_first()
         if image_urls is None:
@@ -86,8 +93,7 @@ class BooksSpider(scrapy.Spider):
 
         description = response.xpath('//div[@id="book-additional-description"]//div//p').get()
         if description and not re.sub(html_tags, "", description).strip():
-            # remove empty <p> tags
-            description = None
+            description = None  # remove empty <p> tags
 
         seo_title = response.xpath('//title/text()').get().strip()
         if seo_title:
